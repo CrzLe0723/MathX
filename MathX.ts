@@ -384,7 +384,8 @@ namespace MathX {
      */
     //% blockId=mathx_ease
     //% block="ease time $t"
-    //% subcategory="Interpolation"
+    //% subcategory="Motion"
+    //% group="Interpolation"
     //% color=#2E86FF
     export function ease(t: number): number {
         return t * t * (3 - 2 * t)
@@ -938,7 +939,7 @@ namespace MathX {
     //% blockId=mathx_sinh
     //% block="sinh $theta"
     //% group=Hyperbolic
-    //% subcategory="Math"
+    //% subcategory="Trigonometry"
     export function sinh(theta: number): number {
         return (Math.exp(theta) - Math.exp(-theta)) / 2
     }

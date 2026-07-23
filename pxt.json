@@ -3,7 +3,8 @@
     "description": "",
     "dependencies": {
         "device": "*",
-        "Vector2 Extension": "github:arandomjuyongithub/pxt-vector2#v1.1.4"
+        "Vector2 Extension": "github:arandomjuyongithub/pxt-vector2#v1.1.4",
+        "browser-events": "*"
     },
     "files": [
         "main.blocks",
