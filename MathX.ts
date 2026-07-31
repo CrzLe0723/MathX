@@ -581,29 +581,129 @@ namespace MathX {
         return (game.runtime() / 1000 * speed) % 1
     }
 
-    let _stopwatches: { [key: string]: number } = {}
+    interface Stopwatch {
+        startTime: number
+        elapsed: number
+        running: boolean
+        stopped: boolean
+    }
+
+    let _stopwatches: { [key: string]: Stopwatch } = {}
 
     /**
-     * Start a stopwatch
-     */
+    * Start a stopwatch
+    */
     //% blockId=mathx_stopwatch_start
     //% block="start stopwatch $key"
     //% subcategory="Time"
     //% color=#1ABC9C
     export function startStopwatch(key: string): void {
-        _stopwatches[key] = game.runtime()
+        _stopwatches[key] = {
+            startTime: game.runtime(),
+            elapsed: 0,
+            running: true,
+            stopped: false
+        }
+    }
+
+    /**
+     * Pause a stopwatch
+     */
+    //% blockId=mathx_stopwatch_pause
+    //% block="pause stopwatch $key"
+    //% subcategory="Time"
+    //% color=#1ABC9C
+    export function pauseStopwatch(key: string): void {
+        const sw = _stopwatches[key]
+        if (!sw || !sw.running || sw.stopped) return
+
+        sw.elapsed += game.runtime() - sw.startTime
+        sw.running = false
+    }
+
+    /**
+     * Resume a stopwatch
+     */
+    //% blockId=mathx_stopwatch_resume
+    //% block="resume stopwatch $key"
+    //% subcategory="Time"
+    //% color=#1ABC9C
+    export function resumeStopwatch(key: string): void {
+        const sw = _stopwatches[key]
+        if (!sw || sw.running || sw.stopped) return
+
+        sw.startTime = game.runtime()
+        sw.running = true
+    }
+
+    /**
+     * Stop a stopwatch
+     */
+    //% blockId=mathx_stopwatch_stop
+    //% block="stop stopwatch $key"
+    //% subcategory="Time"
+    //% color=#1ABC9C
+    export function stopStopwatch(key: string): void {
+        const sw = _stopwatches[key]
+        if (!sw || sw.stopped) return
+
+        if (sw.running) {
+            sw.elapsed += game.runtime() - sw.startTime
+        }
+
+        sw.running = false
+        sw.stopped = true
+    }
+
+    /**
+     * Delete a stopwatch
+     */
+    //% blockId=mathx_stopwatch_delete
+    //% block="delete stopwatch $key"
+    //% subcategory="Time"
+    //% color=#1ABC9C
+    export function deleteStopwatch(key: string): void {
+        delete _stopwatches[key]
     }
 
     /**
      * Read stopwatch time (ms)
      */
     //% blockId=mathx_stopwatch_read
-    //% block="stopwatch $key time"
-    ///% subcategory="Time"
+    //% block="read stopwatch $key time"
+    //% subcategory="Time"
     //% color=#1ABC9C
     export function readStopwatch(key: string): number {
-        if (!_stopwatches[key]) return 0
-        return game.runtime() - _stopwatches[key]
+        const sw = _stopwatches[key]
+        if (!sw) return 0
+
+        if (sw.running) {
+            return sw.elapsed + (game.runtime() - sw.startTime)
+        }
+
+        return sw.elapsed
+    }
+    /**
+     * Is a stopwatch running?
+     */
+    //% blockId=mathx_stopwatch_running
+    //% block="stopwatch $key is running"
+    //% subcategory="Time"
+    //% color=#1ABC9C
+    export function stopwatchRunning(key: string): boolean {
+        const sw = _stopwatches[key]
+        return !!sw && sw.running
+    }
+
+    /**
+     * Stopwatch exists?
+     */
+    //% blockId=mathx_stopwatch_exists
+    //% block="stopwatch $key exists"
+    //% subcategory="Time"
+    //% color=#1ABC9C
+    export function stopwatchExists(key: string): boolean {
+        return _stopwatches[key] !== undefined
     }
     /**
      * Returns velocity toward a target (seek behavior)
@@ -1490,40 +1590,64 @@ namespace MathX {
 
     let formulas: { [key: string]: FormulaFn } = {}
 
+    let currentFormula = ""
+    let currentInput = 0
+
+
     /**
-     * Start defining a formula
-     */
-    //% blockId=mathx_define_formula_start
+    * Define a formula
+    */
+    //% blockId=mathx_define_formula
     //% block="define formula $name with input $x"
+    //% handlerStatement=1
+    //% draggableParameters="reporter"
     //% group="Create"
     //% subcategory="Custom Functions"
     //% name.shadow="text"
-    //% x.shadow="variables_get"
-    export function defineFormulaStart(name: string, x: string): void {
-        formulaVars[name] = x
+    //% x.defl="x"
+    export function defineFormula(
+        name: string,
+        handler: (x: number) => void
+    ): void {
+
+        currentFormula = name
+
+        // Run once so "set result" executes while defining.
+        handler(0)
+
+        currentFormula = ""
     }
-
     /**
-     * Set formula result 
+     * Formula input
      */
-    //% blockId=mathx_define_formula_set
-    //% block="set formula $name result to $value"
+    //% blockId=mathx_formula_input
+    //% block="input"
     //% group="Create"
     //% subcategory="Custom Functions"
-    //% name.shadow="text"
+    export function input(): number {
+        return currentInput
+    }
+    /**
+    * Set formula result
+    */
+    //% blockId=mathx_set_formula_result
+    //% block="set result to $value"
+    //% group="Create"
+    //% subcategory="Custom Functions"
     //% value.shadow="math_number"
-    export function defineFormulaSet(name: string, value: number): void {
-        const varName = formulaVars[name] || "x"
+    export function setFormulaResult(value: number): void {
 
-        formulas[name] = (input: number) => {
-            tempVars[varName] = input
+        if (!currentFormula)
+            return
+
+        formulas[currentFormula] = (x: number) => {
+            currentInput = x
             return value
         }
     }
-
     /**
-     * Evaluate formula
-     */
+    * Evaluate formula
+    */
     //% blockId=mathx_eval_formula
     //% block="evaluate formula $name with $x"
     //% group="Run"
@@ -1531,8 +1655,12 @@ namespace MathX {
     //% name.shadow="text"
     //% x.shadow="math_number"
     export function evalFormula(name: string, x: number): number {
+
         let fn = formulas[name]
-        if (!fn) return 0
+
+        if (!fn)
+            return 0
+
         return fn(x)
     }
 
