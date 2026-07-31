@@ -99,7 +99,10 @@ namespace MathX {
         GAMMA = 18,
 
         //% block="Apéry ζ(3)"
-        APERY = 19
+        APERY = 19,
+
+        //% block="ε (epsilon)"
+        Epsilon = 20
     }
     //Vars
     let formulaVars: { [key: string]: string } = {}
@@ -1510,6 +1513,9 @@ namespace MathX {
                 break
             case Constants.APERY:
                 return 1.2020569031595943
+                break
+            case Constants.Epsilon:
+                return 2.220446049250313e-16
                 break
             default:
                 return 0
