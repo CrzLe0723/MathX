@@ -22,7 +22,6 @@ browserEvents.One.onEvent(browserEvents.KeyEvent.Pressed, function () {
 
 
 
-
 // Functions
 function callTest(testNum: number): void {
 

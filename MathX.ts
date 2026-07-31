@@ -1664,7 +1664,7 @@ namespace MathX {
             super();
         }
     }
-
+    let formulas: { [name: string]: ExpressionNode } = {}
     /**
      * Binary operation
      */
@@ -1766,7 +1766,45 @@ namespace MathX {
         return NaN;
     }
 
+    /**
+     * Define a formula
+     * @param name id for function 
+     */
+    //% blockId=mathx_define_formula
+    //% block="define formula $name as $expression"
+    //% group="Expressions"
+    //% subcategory="Custom Functions"
+    //% name.shadow="text"
+    //% expression.shadow="mathx_expression_input"
+    export function defineFormula(
+        name: string,
+        expression: ExpressionNode
+    ): void {
+        formulas[name] = expression
+    }
+    /**
+     * Run a formula
+     * @parm name id for forumla to run
+     */
+    //% blockId=mathx_run_formula
+    //% block="run formula $name with parameters $parameters"
+    //% group="Expressions"
+    //% subcategory="Custom Functions"
+    //% name.shadow="text"
+    //% parameters.shadow="lists_create_with"
+    export function runFormula(
+        name: string,
+        parameters: number[]
+    ): number {
 
+        const formula = formulas[name]
+
+        if (!formula) {
+            return NaN
+        }
+
+        return evaluate(formula, parameters)
+    }
 
     // Unused code right now:
     /**
