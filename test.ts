@@ -71,7 +71,7 @@ function callTest(testNum: number): void {
                 . . c b d d d d d 5 5 5 b b . .
                 . . . c c c c c c c c b b . . .
             `, SpriteKind.Player)
-            mySprite2.setPosition(40, 90)
+            mySprite2.setPosition(60, 90)
 
 
             break
@@ -82,6 +82,6 @@ function callTest(testNum: number): void {
 game.onUpdate(() => {
     if (testNumber == 0) {
         mySprite.sayText("Game time (Ms): " + MathX.timeMs() + "\n" + "Game time (s): " + MathX.timeSeconds())
-
+        mySprite2.sayText("Stopwatch time: (Ms)" + MathX.readStopwatch("Timer 1"))
     }
 })
