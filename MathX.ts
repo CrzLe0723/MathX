@@ -1725,6 +1725,8 @@ namespace MathX {
     //% expression.shadow=eq_binary
     //% parameters.shadow=lists_create_with
     //% parameters.defl=math_number
+    //% group="Expressions"
+    //% subcategory="Custom Functions"
     //% weight=100
     export function evaluate(
         expression: ExpressionNode | number,
