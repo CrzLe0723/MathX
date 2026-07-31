@@ -163,7 +163,7 @@ namespace MathX {
             ? Math.min(current + speed, target)
             : Math.max(current - speed, target)
     }
-    
+
     /**
      * Spiral motion (radius grows over time)
      * @param t time
@@ -406,7 +406,7 @@ namespace MathX {
     export function clamp(value: number, min: number, max: number): number {
         return Math.min(max, Math.max(min, value))
     }
-    
+
     /**
      * Convert a value from one range to another
      * @param value input value
@@ -422,7 +422,7 @@ namespace MathX {
     export function map(value: number, a1: number, a2: number, b1: number, b2: number): number {
         return b1 + (value - a1) * (b2 - b1) / (a2 - a1)
     }
-    
+
 
 
     //---GEOMETRY---
@@ -1592,95 +1592,276 @@ namespace MathX {
     // CUSTOM FUNCTIONS 
 
 
-    type FormulaFn = (x: number) => number
-
-    let formulas: { [key: string]: FormulaFn } = {}
-
-    let currentFormula = ""
-    let currentInput = 0
-
-
-    /**
-    * Define a formula
-    */
-    //% blockId=mathx_define_formula
-    //% block="define formula $name with input $x"
-    //% handlerStatement=1
-    //% draggableParameters="reporter"
-    //% group="Create"
-    //% subcategory="Custom Functions"
-    //% name.shadow="text"
-    //% x.defl="x"
-    export function defineFormula(
-        name: string,
-        handler: (x: number) => void
-    ): void {
-
-        currentFormula = name
-
-        // Run once so "set result" executes while defining.
-        handler(0)
-
-        currentFormula = ""
+    export enum BinaryOperator {
+        //% block="+"
+        Plus,
+        //% block="-"
+        Minus,
+        //% block="*"
+        Multiply,
+        //% block="/"
+        Divide,
+        //% block="**"
+        Pow
     }
-    /**
-     * Formula input
-     */
-    //% blockId=mathx_formula_input
-    //% block="input"
-    //% group="Create"
-    //% subcategory="Custom Functions"
-    export function input(): number {
-        return currentInput
+
+    export enum UnaryOperator {
+        //% block="absolute value"
+        Absolute,
+
+        //% block="square root"
+        SquareRoot,
+
+        //% block="sin"
+        Sine,
+
+        //% block="cos"
+        Cosine,
+
+        //% block="tan"
+        Tangent,
+
+        //% block="round"
+        Round,
+
+        //% block="floor"
+        Floor,
+
+        //% block="ceiling"
+        Ceiling,
+
+        //% block="truncate"
+        Truncate
     }
-    /**
-    * Set formula result
-    */
-    //% blockId=mathx_set_formula_result
-    //% block="set result to $value"
-    //% group="Create"
-    //% subcategory="Custom Functions"
-    //% value.shadow="math_number"
-    export function setFormulaResult(value: number): void {
 
-        if (!currentFormula)
-            return
+    export class ExpressionNode {
+        constructor() { }
+    }
 
-        formulas[currentFormula] = (x: number) => {
-            currentInput = x
-            return value
+    export class BinaryExpressionNode extends ExpressionNode {
+        constructor(
+            public op: BinaryOperator,
+            public left: ExpressionNode | number,
+            public right: ExpressionNode | number
+        ) {
+            super();
         }
     }
-    /**
-    * Evaluate formula
-    */
-    //% blockId=mathx_eval_formula
-    //% block="evaluate formula $name with $x"
-    //% group="Run"
-    //% subcategory="Custom Functions"
-    //% name.shadow="text"
-    //% x.shadow="math_number"
-    export function evalFormula(name: string, x: number): number {
 
-        let fn = formulas[name]
+    export class UnaryExpressionNode extends ExpressionNode {
+        constructor(
+            public op: UnaryOperator,
+            public arg: ExpressionNode | number
+        ) {
+            super();
+        }
+    }
 
-        if (!fn)
-            return 0
-
-        return fn(x)
+    export class ParameterNode extends ExpressionNode {
+        constructor(
+            public index: number
+        ) {
+            super();
+        }
     }
 
     /**
-     * Get variable inside formula
+     * Binary operation
      */
-    //% blockId=mathx_get_var
-    //% block="$name"
-    //% group="Variables"
+    //% blockId=mathx_expression_binary
+    //% block="$left $op $right"
+    //% left.shadow="math_number"
+    //% right.shadow="math_number"
+    //% group="Expressions"
     //% subcategory="Custom Functions"
-    //% name.shadow="text"
-    export function getVar(name: string): number {
-        return tempVars[name] || 0
+    export function binary(
+        op: BinaryOperator,
+        left: ExpressionNode | number,
+        right: ExpressionNode | number
+    ): ExpressionNode {
+        return new BinaryExpressionNode(op, left, right)
     }
+
+    /**
+     * Unary operations
+     */
+    //% blockId=mathx_expression_unary
+    //% block="$op $arg"
+    //% group="Create"
+    //% subcategory="Custom Functions"
+    //% arg.shadow=math_number
+    //% weight=85
+    export function unaryOp(op: UnaryOperator, arg: ExpressionNode | number): ExpressionNode {
+        return new UnaryExpressionNode(op, arg);
+    }
+
+    /**
+     * Input
+     */
+    //% blockId=mathx_expression_input
+    //% block="input"
+    //% group="Expressions"
+    //% subcategory="Custom Functions"
+    export function input(): ExpressionNode {
+        return new ParameterNode(0)
+    }
+    /**
+     * Parameter (a move advanced "input" for custom equations with multiple inputs)
+     * @index parameter index
+     */
+    //% blockId=mathx_expression_parameter
+    //% block="input"
+    //% group="Expressions"
+    //% subcategory="Custom Functions"
+    export function parameter(index: number): ExpressionNode {
+        return new ParameterNode(index)
+    }
+
+    /**
+     * Evaluate the equation with the specified inputs.
+     */
+    //% blockId=mathx_expression_evaluate
+    //% block="evaluate $expression with parameters $parameters"
+    //% expression.shadow=eq_binary
+    //% parameters.shadow=lists_create_with
+    //% parameters.defl=math_number
+    //% weight=100
+    export function evaluate(
+        expression: ExpressionNode | number,
+        parameters: number[]
+    ): number {
+        if (typeof expression === "number") {
+            return expression;
+        }
+        else if (expression instanceof ParameterNode) {
+            return parameters[expression.index];
+        }
+        else if (expression instanceof BinaryExpressionNode) {
+            const leftValue = evaluate(expression.left, parameters);
+            const rightValue = evaluate(expression.right, parameters);
+
+            switch (expression.op) {
+                case BinaryOperator.Plus: return leftValue + rightValue;
+                case BinaryOperator.Minus: return leftValue - rightValue;
+                case BinaryOperator.Multiply: return leftValue * rightValue;
+                case BinaryOperator.Divide: return leftValue / rightValue;
+                case BinaryOperator.Pow: return leftValue ** rightValue;
+            }
+        }
+        else if (expression instanceof UnaryExpressionNode) {
+            const arg = evaluate(expression.arg, parameters);
+
+            switch (expression.op) {
+                case UnaryOperator.SquareRoot: return Math.sqrt(arg);
+                case UnaryOperator.Sine: return Math.sin(arg);
+                case UnaryOperator.Cosine: return Math.cos(arg);
+                case UnaryOperator.Round: return Math.round(arg);
+                case UnaryOperator.Ceiling: return Math.ceil(arg);
+                case UnaryOperator.Floor: return Math.floor(arg);
+                case UnaryOperator.Truncate: return Math.trunc(arg);
+                case UnaryOperator.Absolute: return Math.abs(arg);
+            }
+        }
+
+        return NaN;
+    }
+
+
+
+    // Unused code right now:
+    /**
+     
+    */
+
+    // type FormulaFn = (x: number) => number
+
+    // let formulas: { [key: string]: FormulaFn } = {}
+
+    // let currentFormula = ""
+    // let currentInput = 0
+
+
+    // /**
+    // * Define a formula
+    // */
+    // //% blockId=mathx_define_formula
+    // //% block="define formula $name with input $x"
+    // //% handlerStatement=1
+    // //% draggableParameters="reporter"
+    // //% group="Create"
+    // //% subcategory="Custom Functions"
+    // //% name.shadow="text"
+    // //% x.defl="x"
+    // export function defineFormula(
+    //     name: string,
+    //     handler: (x: number) => void
+    // ): void {
+
+    //     currentFormula = name
+
+    //     // Run once so "set result" executes while defining.
+    //     handler(0)
+
+    //     currentFormula = ""
+    // }
+    // /**
+    //  * Formula input
+    //  */
+    // //% blockId=mathx_formula_input
+    // //% block="input"
+    // //% group="Create"
+    // //% subcategory="Custom Functions"
+    // export function input(): number {
+    //     return currentInput
+    // }
+    // /**
+    // * Set formula result
+    // */
+    // //% blockId=mathx_set_formula_result
+    // //% block="set result to $value"
+    // //% group="Create"
+    // //% subcategory="Custom Functions"
+    // //% value.shadow="math_number"
+    // export function setFormulaResult(value: number): void {
+
+    //     if (!currentFormula)
+    //         return
+
+    //     formulas[currentFormula] = (x: number) => {
+    //         currentInput = x
+    //         return value
+    //     }
+    // }
+    // /**
+    // * Evaluate formula
+    // */
+    // //% blockId=mathx_eval_formula
+    // //% block="evaluate formula $name with $x"
+    // //% group="Run"
+    // //% subcategory="Custom Functions"
+    // //% name.shadow="text"
+    // //% x.shadow="math_number"
+    // export function evalFormula(name: string, x: number): number {
+
+    //     let fn = formulas[name]
+
+    //     if (!fn)
+    //         return 0
+
+    //     return fn(x)
+    // }
+
+    // /**
+    //  * Get variable inside formula
+    //  */
+    // //% blockId=mathx_get_var
+    // //% block="$name"
+    // //% group="Variables"
+    // //% subcategory="Custom Functions"
+    // //% name.shadow="text"
+    // export function getVar(name: string): number {
+    //     return tempVars[name] || 0
+    // }
 
 
     //---Number Theory---
