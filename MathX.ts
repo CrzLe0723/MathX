@@ -1710,7 +1710,7 @@ namespace MathX {
      * @index parameter index
      */
     //% blockId=mathx_expression_parameter
-    //% block="input"
+    //% block="parameter $index"
     //% group="Expressions"
     //% subcategory="Custom Functions"
     export function parameter(index: number): ExpressionNode {
