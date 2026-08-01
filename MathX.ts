@@ -1634,10 +1634,31 @@ namespace MathX {
         Truncate
     }
 
+    export enum MultiFunction {
+        //% block="minimum"
+        Min,
+
+        //% block="maximum"
+        Max,
+
+        //% block="clamp"
+        Clamp,
+
+        //% block="lerp"
+        Lerp
+    }
     export class ExpressionNode {
         constructor() { }
     }
 
+    export class MultiFunctionExpressionNode extends ExpressionNode {
+        constructor(
+            public func: MultiFunction,
+            public args: (ExpressionNode | number)[]
+        ) {
+            super();
+        }
+    }
     export class BinaryExpressionNode extends ExpressionNode {
         constructor(
             public op: BinaryOperator,
@@ -1687,14 +1708,27 @@ namespace MathX {
      */
     //% blockId=mathx_expression_unary
     //% block="$op $arg"
-    //% group="Create"
+    //% group="Expressions"
     //% subcategory="Custom Functions"
     //% arg.shadow=math_number
     //% weight=85
     export function unaryOp(op: UnaryOperator, arg: ExpressionNode | number): ExpressionNode {
         return new UnaryExpressionNode(op, arg);
     }
-
+    /**
+     * Multi-input function expression
+     */
+    //% blockId=mathx_expression_multifunction
+    //% block="$func with arguments $args"
+    //% group="Expressions"
+    //% subcategory="Custom Functions"
+    //% args.shadow="lists_create_with"
+    export function multiFunctionExpression(
+        func: MultiFunction,
+        args: (ExpressionNode | number)[]
+    ): ExpressionNode {
+        return new MultiFunctionExpressionNode(func, args)
+    }
     /**
      * Input
      */
@@ -1711,6 +1745,7 @@ namespace MathX {
      */
     //% blockId=mathx_expression_parameter
     //% block="parameter $index"
+    //% index.shadow="math_number"
     //% group="Expressions"
     //% subcategory="Custom Functions"
     export function parameter(index: number): ExpressionNode {
@@ -1722,10 +1757,10 @@ namespace MathX {
      */
     //% blockId=mathx_expression_evaluate
     //% block="evaluate $expression with parameters $parameters"
-    //% expression.shadow=eq_binary
+    //% expression.shadow=mathx_expression_binary
     //% parameters.shadow=lists_create_with
     //% parameters.defl=math_number
-    //% group="Expressions"
+    //% group="Evaluate"
     //% subcategory="Custom Functions"
     //% weight=100
     export function evaluate(
@@ -1764,7 +1799,30 @@ namespace MathX {
                 case UnaryOperator.Absolute: return Math.abs(arg);
             }
         }
+        else if (expression instanceof MultiFunctionExpressionNode) {
 
+            const args = expression.args.map(
+                value => evaluate(value, parameters)
+            )
+
+            switch (expression.func) {
+
+                case MultiFunction.Min:
+                    return Math.min(args[0], args[1])
+
+                case MultiFunction.Max:
+                    return Math.max(args[0], args[1])
+
+                case MultiFunction.Clamp:
+                    return Math.max(
+                        args[1],
+                        Math.min(args[0], args[2])
+                    )
+
+                case MultiFunction.Lerp:
+                    return args[0] + (args[1] - args[0]) * args[2]
+            }
+        }
         return NaN;
     }
 
@@ -1774,7 +1832,7 @@ namespace MathX {
      */
     //% blockId=mathx_define_formula
     //% block="define formula $name as $expression"
-    //% group="Expressions"
+    //% group="Create"
     //% subcategory="Custom Functions"
     //% name.shadow="text"
     //% expression.shadow="mathx_expression_input"
@@ -1786,11 +1844,11 @@ namespace MathX {
     }
     /**
      * Run a formula
-     * @parm name id for forumla to run
+     * @parma name id for forumla to run
      */
     //% blockId=mathx_run_formula
     //% block="run formula $name with parameters $parameters"
-    //% group="Expressions"
+    //% group="Evaluate"
     //% subcategory="Custom Functions"
     //% name.shadow="text"
     //% parameters.shadow="lists_create_with"
@@ -1806,103 +1864,10 @@ namespace MathX {
         }
 
         return evaluate(formula, parameters)
+        
     }
 
-    // Unused code right now:
-    /**
-     
-    */
-
-    // type FormulaFn = (x: number) => number
-
-    // let formulas: { [key: string]: FormulaFn } = {}
-
-    // let currentFormula = ""
-    // let currentInput = 0
-
-
-    // /**
-    // * Define a formula
-    // */
-    // //% blockId=mathx_define_formula
-    // //% block="define formula $name with input $x"
-    // //% handlerStatement=1
-    // //% draggableParameters="reporter"
-    // //% group="Create"
-    // //% subcategory="Custom Functions"
-    // //% name.shadow="text"
-    // //% x.defl="x"
-    // export function defineFormula(
-    //     name: string,
-    //     handler: (x: number) => void
-    // ): void {
-
-    //     currentFormula = name
-
-    //     // Run once so "set result" executes while defining.
-    //     handler(0)
-
-    //     currentFormula = ""
-    // }
-    // /**
-    //  * Formula input
-    //  */
-    // //% blockId=mathx_formula_input
-    // //% block="input"
-    // //% group="Create"
-    // //% subcategory="Custom Functions"
-    // export function input(): number {
-    //     return currentInput
-    // }
-    // /**
-    // * Set formula result
-    // */
-    // //% blockId=mathx_set_formula_result
-    // //% block="set result to $value"
-    // //% group="Create"
-    // //% subcategory="Custom Functions"
-    // //% value.shadow="math_number"
-    // export function setFormulaResult(value: number): void {
-
-    //     if (!currentFormula)
-    //         return
-
-    //     formulas[currentFormula] = (x: number) => {
-    //         currentInput = x
-    //         return value
-    //     }
-    // }
-    // /**
-    // * Evaluate formula
-    // */
-    // //% blockId=mathx_eval_formula
-    // //% block="evaluate formula $name with $x"
-    // //% group="Run"
-    // //% subcategory="Custom Functions"
-    // //% name.shadow="text"
-    // //% x.shadow="math_number"
-    // export function evalFormula(name: string, x: number): number {
-
-    //     let fn = formulas[name]
-
-    //     if (!fn)
-    //         return 0
-
-    //     return fn(x)
-    // }
-
-    // /**
-    //  * Get variable inside formula
-    //  */
-    // //% blockId=mathx_get_var
-    // //% block="$name"
-    // //% group="Variables"
-    // //% subcategory="Custom Functions"
-    // //% name.shadow="text"
-    // export function getVar(name: string): number {
-    //     return tempVars[name] || 0
-    // }
-
+    
 
     //---Number Theory---
     /**
