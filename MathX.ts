@@ -1855,7 +1855,7 @@ namespace MathX {
     /**
      * Run a formula
      * @param name id for forumla to run
-     * @para parameters the parameters for that function
+     * @param parameters the parameters for that function
      */
     //% blockId=mathx_run_formula
     //% block="run formula $name with parameters $parameters"
