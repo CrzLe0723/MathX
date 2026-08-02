@@ -1688,6 +1688,9 @@ namespace MathX {
     let formulas: { [name: string]: ExpressionNode } = {}
     /**
      * Binary operation
+     * @param op the operator to perform 
+     * @param left the left expression value 
+     * @param right the right expression value 
      */
     //% blockId=mathx_expression_binary
     //% block="$left $op $right"
@@ -1705,6 +1708,8 @@ namespace MathX {
 
     /**
      * Unary operations
+     * @param op the operator expression 
+     * @param arg the argument for that operator expression
      */
     //% blockId=mathx_expression_unary
     //% block="$op $arg"
@@ -1717,6 +1722,8 @@ namespace MathX {
     }
     /**
      * Multi-input function expression
+     * @param func the function expression to call 
+     * @param args the arguments for that function
      */
     //% blockId=mathx_expression_multifunction
     //% block="$func with arguments $args"
@@ -1741,7 +1748,7 @@ namespace MathX {
     }
     /**
      * Parameter (a move advanced "input" for custom equations with multiple inputs)
-     * @index parameter index
+     * @param index parameter index
      */
     //% blockId=mathx_expression_parameter
     //% block="parameter $index"
@@ -1754,6 +1761,8 @@ namespace MathX {
 
     /**
      * Evaluate the equation with the specified inputs.
+     * @param expression the expression to evaluate
+     * @param parametersthe parameters to evaluate for that expression
      */
     //% blockId=mathx_expression_evaluate
     //% block="evaluate $expression with parameters $parameters"
@@ -1829,6 +1838,7 @@ namespace MathX {
     /**
      * Define a formula
      * @param name id for function 
+     * @param expression the expression for that function
      */
     //% blockId=mathx_define_formula
     //% block="define formula $name as $expression"
@@ -1844,7 +1854,8 @@ namespace MathX {
     }
     /**
      * Run a formula
-     * @parma name id for forumla to run
+     * @param name id for forumla to run
+     * @para parameters the parameters for that function
      */
     //% blockId=mathx_run_formula
     //% block="run formula $name with parameters $parameters"
