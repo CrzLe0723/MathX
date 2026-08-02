@@ -6,6 +6,7 @@
  */
 //% weight=100 //% color=#2E86FF icon="\uf201" //% groups=['Constants','Trigonometry','Create','Use','Variables','Advanced']
 namespace MathX {
+
     //% blockId=mathx_easing_mode
     export enum EasingMode {
         //% block="linear"
@@ -122,6 +123,7 @@ namespace MathX {
     //% group="Interpolation"
     export function lerp(a: number, b: number, t: number): number {
         return a + (b - a) * t
+
     }
 
     /**
